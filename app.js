@@ -15,7 +15,7 @@ const options = {
 //SPOTIFY INFORMATION
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const REDIRECT_URI = "161.35.188.78:443/callback";
+const REDIRECT_URI = "161.35.188.78:80/callback";
 const GITHUB_REDIRECT = "https://mattburseth1221.github.io";
 const LOCALHOST = "http://localhost:5502";
 const MAIN_SITE_REDIRECT = LOCALHOST;
@@ -35,7 +35,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
-http.createServer(app).listen(8443);
+http.createServer(app).listen(80);
 https.createServer(options, app).listen(443);
 
 const testJSON = {
