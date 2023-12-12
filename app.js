@@ -18,7 +18,7 @@ const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI = "161.35.188.78:80/callback";
 const GITHUB_REDIRECT = "https://mattburseth1221.github.io";
 const LOCALHOST = "http://localhost:5502";
-const MAIN_SITE_REDIRECT = "https://mattburseth.com";
+const MAIN_SITE_REDIRECT = "https://mattburseth.pages.dev/";
 
 var state;
 var accessCode;
