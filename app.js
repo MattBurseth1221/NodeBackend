@@ -3,24 +3,24 @@ const express = require("express");
 const https = require("https");
 const http = require("http");
 const fs = require("fs");
-require("dotenv").config();
+require("dotenv").config({ path: "./vars/.env" });
 
 const pool = require("./db");
 
 const app = express();
 const port = 8443;
-const options = {
-  key: fs.readFileSync("server.key"),
-  cert: fs.readFileSync("server.cert"),
-};
+// const options = {
+//   key: fs.readFileSync("server.key"),
+//   cert: fs.readFileSync("server.cert"),
+// };
 
 //SPOTIFY INFORMATION
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const REDIRECT_URI = "https://161.35.188.78:443/callback";
+const REDIRECT_URI = "http://localhost:8443/callback";
 const GITHUB_REDIRECT = "https://mattburseth1221.github.io";
 const LOCALHOST = "http://localhost:5502";
-const MAIN_SITE_REDIRECT = "https://mattburseth.pages.dev/";
+const MAIN_SITE_REDIRECT = LOCALHOST;
 
 var state;
 var accessCode;
@@ -37,8 +37,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
-http.createServer(app).listen(80);
-https.createServer(options, app).listen(443);
+http.createServer(app).listen(8443);
+//https.createServer(options, app).listen(443);
 
 const testJSON = {
   name: "name",
@@ -104,9 +104,9 @@ app.get("/callback", async (req, res) => {
   let urlState = urlParams.get("state");
   accessCode = urlParams.get("/callback?code");
 
-  console.log("url: " + req.url);
+  console.log("access code " + accessCode);
 
-  console.log("secret: " + CLIENT_SECRET);
+  console.log("secret: " + CLIENT_SECRET + " ----------------- " + CLIENT_ID);
 
   //This if statement was supposed to be for verifying "state" parameter?
   //May still be needed, although this is optional in spotify api documentation
@@ -129,6 +129,8 @@ app.get("/callback", async (req, res) => {
         code_verifier: codeVerifier,
       }),
     }).then((response) => response.json());
+
+    console.log(tokenResponse);
 
     accessToken = tokenResponse.access_token;
     refreshToken = tokenResponse.refresh_token;
