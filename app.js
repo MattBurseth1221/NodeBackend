@@ -5,6 +5,8 @@ const http = require("http");
 const fs = require("fs");
 require("dotenv").config();
 
+const pool = require("./db");
+
 const app = express();
 const port = 8443;
 const options = {
@@ -44,6 +46,10 @@ const testJSON = {
   number: 9,
 };
 
+app.post("/login", async (req, res, next) => {
+  console.log(req.body);
+});
+
 //First route in all spotify api calls from frontend
 //Makes sure access token is present and can be used in further routes
 //TODO: Find a way to make sure access token is still valid - if not, refresh the token
@@ -69,8 +75,6 @@ app.get("/request-files", (req, res) => {
 //If successful, send back 200 status?
 //CHECK STATUSES
 app.post("/verifier-code", (req, res) => {
-  console.log(req.body);
-
   if (req.body !== null) {
     codeVerifier = req.body.code_verifier;
 
