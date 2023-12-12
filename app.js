@@ -8,8 +8,8 @@ require("dotenv").config();
 const app = express();
 const port = 8443;
 const options = {
-  key: fs.readFileSync("ssl/mattburseth.com.key"),
-  cert: fs.readFileSync("ssl/mattburseth.com.pem"),
+  key: fs.readFileSync("server.key"),
+  cert: fs.readFileSync("server.cert"),
 };
 
 //SPOTIFY INFORMATION
