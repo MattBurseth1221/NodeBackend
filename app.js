@@ -100,6 +100,8 @@ app.get("/callback", async (req, res) => {
   let urlState = urlParams.get("state");
   accessCode = urlParams.get("/callback?code");
 
+  console.log("url: " + req.url);
+
   //This if statement was supposed to be for verifying "state" parameter?
   //May still be needed, although this is optional in spotify api documentation
   if (true) {
