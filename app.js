@@ -51,7 +51,7 @@ app.get("/spotify-api/*", async (req, res, next) => {
   console.log("Validating tokens...");
 
   if (accessToken !== null && refreshToken !== null) {
-    const testResult = await getProfileInfo();
+    //const testResult = await getProfileInfo();
 
     next("route");
   } else if (accessToken === null && refreshToken === null) {
@@ -124,6 +124,8 @@ app.get("/callback", async (req, res) => {
 
     accessToken = tokenResponse.access_token;
     refreshToken = tokenResponse.refresh_token;
+
+    console.log("access token: " + accessToken);
 
     res.redirect(MAIN_SITE_REDIRECT);
   } else {
