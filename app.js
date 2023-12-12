@@ -102,6 +102,8 @@ app.get("/callback", async (req, res) => {
 
   console.log("url: " + req.url);
 
+  console.log("secret: " + CLIENT_SECRET);
+
   //This if statement was supposed to be for verifying "state" parameter?
   //May still be needed, although this is optional in spotify api documentation
   if (true) {
