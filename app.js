@@ -5,7 +5,7 @@ const http = require("http");
 const fs = require("fs");
 require("dotenv").config({ path: "./vars/.env" });
 
-const pool = require("./db").pool;
+const client = require("./db").client;
 
 const app = express();
 const port = 8443;
@@ -55,7 +55,7 @@ app.post("/user", async (req, res) => {
     "INSERT INTO users(user_id, username, password_hash, first_name, last_name) VALUES($1, $2, $3, $4, $4) RETURNING *";
   const values = [req.body.user_id, "test", "test", "test"];
 
-  const result = await pool.query(queryText, values);
+  const result = await client.query(queryText, values);
 
   res.send(result);
 });
