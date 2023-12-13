@@ -5,7 +5,7 @@ const http = require("http");
 const fs = require("fs");
 require("dotenv").config({ path: "./vars/.env" });
 
-const pool = require("./db");
+const pool = require("./db").pool;
 
 const app = express();
 const port = 8443;
@@ -48,6 +48,16 @@ const testJSON = {
 
 app.post("/login", async (req, res, next) => {
   console.log(req.body);
+});
+
+app.post("/user", async (req, res) => {
+  const queryText =
+    "INSERT INTO users(user_id, username, password_hash, first_name, last_name) VALUES($1, $2, $3, $4, $4) RETURNING *";
+  const values = [req.body.user_id, "test", "test", "test"];
+
+  const result = await pool.query(queryText, values);
+
+  res.send(result);
 });
 
 //First route in all spotify api calls from frontend
