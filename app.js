@@ -3,9 +3,13 @@ const express = require("express");
 const https = require("https");
 const http = require("http");
 const fs = require("fs");
+const { v4: uuidv4 } = require("uuid");
+const { createHash } = require("node:crypto");
 require("dotenv").config({ path: "./vars/.env" });
 
 const client = require("./db").client;
+
+const hash = createHash("sha256");
 
 const app = express();
 const port = 8443;
@@ -46,8 +50,26 @@ const testJSON = {
   number: 9,
 };
 
-app.post("/login", async (req, res, next) => {
+app.post("/signup", async (req, res) => {
   console.log(req.body);
+  const username = req.body.username;
+
+  const queryText = "SELECT * FROM users WHERE username = $1";
+
+  const query = {
+    text: queryText,
+    values: [username],
+  };
+
+  const result = await client.query(query);
+
+  if (result.rowCount >= 1) {
+    console.log("error!");
+    res.send({ error: `User ${username} already exists.` });
+  } else {
+    createUser(req.body);
+    res.send({ success: `User ${username} created successfully.` }).status(200);
+  }
 });
 
 app.post("/user", async (req, res) => {
@@ -258,4 +280,23 @@ async function getProfileInfo() {
   }).then((response) => response.json());
 
   return result;
+}
+
+async function createUser(user) {
+  const user_id = uuidv4();
+  console.log("uuid: " + user_id);
+
+  const password_hash = hash.update(user.password);
+
+  const queryText =
+    "INSERT INTO users(user_id, username, password_hash, email_address) VALUES($1, $2, $3, $4) RETURNING *;";
+
+  const query = {
+    text: queryText,
+    values: [user_id, user.username, hash.digest("hex"), user.email],
+  };
+
+  const queryResult = await client.query(query);
+
+  console.log(queryResult);
 }
