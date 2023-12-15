@@ -51,6 +51,7 @@ const testJSON = {
 };
 
 app.post("/signup", async (req, res) => {
+  console.log("here");
   console.log(req.body);
   const username = req.body.username;
 
