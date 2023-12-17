@@ -1,5 +1,7 @@
 const cors = require("cors");
 const express = require("express");
+const session = require("express-session");
+const cookieParser = require("cookie-parser");
 const https = require("https");
 const http = require("http");
 const fs = require("fs");
@@ -40,6 +42,14 @@ const SPOTIFY_API_TOKEN = "https://accounts.spotify.com/api/token";
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
+app.use(cookieParser());
+app.use(
+  session({
+    secret: "mburseth",
+    saveUninitialized: true,
+    resave: true,
+  })
+);
 
 http.createServer(app).listen(8443);
 //https.createServer(options, app).listen(443);
@@ -51,26 +61,91 @@ const testJSON = {
 };
 
 app.post("/signup", async (req, res) => {
-  console.log("here");
-  console.log(req.body);
-  const username = req.body.username;
+  if (req.body.length == 0) {
+    // console.log("bad body!");
+    res.send({ error: "Empty Body" }).status(200);
+    return;
+  }
 
-  const queryText = "SELECT * FROM users WHERE username = $1";
+  const username = req.body.username;
+  const email = req.body.email;
+
+  const queryText =
+    "SELECT * FROM users WHERE username = $1 OR email_address = $2";
 
   const query = {
     text: queryText,
-    values: [username],
+    values: [username, email],
   };
 
   const result = await client.query(query);
 
   if (result.rowCount >= 1) {
-    console.log("error!");
-    res.send({ error: `User ${username} already exists.` });
+    // console.log("error!");
+    res
+      .send({
+        error: `Username \"${username}\" or email \"${email}\" already in use.`,
+      })
+      .status(200);
   } else {
     createUser(req.body);
-    res.send({ success: `User ${username} created successfully.` }).status(200);
+    res
+      .send({ success: `User \"${username}\" created successfully.` })
+      .status(200);
   }
+});
+
+app.get("/login", async (req, res) => {
+  let urlParams = new URLSearchParams(req.query);
+
+  console.log(urlParams);
+
+  if (urlParams.length == 0) {
+    res.send({ error: "Empty Body" }).status(200);
+    return;
+  }
+
+  const userLogin = urlParams.get("userlogin");
+  const password = urlParams.get("password");
+
+  console.log(userLogin);
+  console.log(password);
+
+  const findUser = await findUserLogin(userLogin);
+
+  console.log(findUser);
+
+  if (findUser.rowCount == 0) {
+    console.log("no user");
+    res.send({ error: "No user found" }).status(200);
+    return;
+  } else if (findUser.rowCount > 1) {
+    console.log("Serious error");
+    res
+      .send({
+        error:
+          "Duplicate accounts detected. This is bad. Contact mattburseth@gmail.com.",
+      })
+      .status(200);
+  }
+
+  console.log(findUser);
+
+  const hashObj = createHash("sha256");
+  //console.log(hashObj.update(password).digest("hex"));
+  if (
+    findUser.rows[0].password_hash == hashObj.update(password).digest("hex")
+  ) {
+    console.log("good");
+    req.session.loggedIn = true;
+    req.session.loggedInUsername = findUser.username;
+
+    res.send({ success: "Succcessful Login!" }).status(200);
+  } else {
+    res.send({ error: "Wrong password. Please try again." }).status(200);
+  }
+
+  return;
 });
 
 app.post("/user", async (req, res) => {
@@ -285,7 +360,7 @@ async function getProfileInfo() {
 
 async function createUser(user) {
   const user_id = uuidv4();
-  console.log("uuid: " + user_id);
+  // console.log("uuid: " + user_id);
 
   const password_hash = hash.update(user.password);
 
@@ -299,5 +374,19 @@ async function createUser(user) {
 
   const queryResult = await client.query(query);
 
-  console.log(queryResult);
+  // console.log(queryResult);
+}
+
+async function findUserLogin(userLogin) {
+  console.log(userLogin);
+
+  const queryText =
+    "SELECT * FROM users WHERE username = $1 OR email_address = $1";
+
+  const query = {
+    text: queryText,
+    values: [userLogin],
+  };
+
+  return await client.query(query);
 }
