@@ -16,6 +16,7 @@
     "fs": "^0.0.1-security",
     "http": "^0.0.1-security",
     "https": "^1.0.0",
+    "moment": "^2.29.4",
     "nodemon": "^3.0.2",
     "pg": "^8.11.3",
     "server": "^1.0.38",

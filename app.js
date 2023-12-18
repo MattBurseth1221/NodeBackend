@@ -11,8 +11,6 @@ require("dotenv").config({ path: "./vars/.env" });
 
 const client = require("./db").client;
 
-const hash = createHash("sha256");
-
 const app = express();
 const port = 8443;
 // const options = {
@@ -39,6 +37,8 @@ const BASE_API_CALL = "https://api.spotify.com.";
 const SPOTIFY_SEARCH_CALL = "https://api.spotify.com/v1/search?";
 const SPOTIFY_API_TOKEN = "https://accounts.spotify.com/api/token";
 
+const oneDay = 1000 * 60 * 60 * 24;
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
@@ -47,7 +47,8 @@ app.use(
   session({
     secret: "mburseth",
     saveUninitialized: true,
-    resave: true,
+    cookie: { maxAge: oneDay },
+    resave: false,
   })
 );
 
@@ -108,12 +109,7 @@ app.get("/login", async (req, res) => {
   const userLogin = urlParams.get("userlogin");
   const password = urlParams.get("password");
 
-  console.log(userLogin);
-  console.log(password);
-
   const findUser = await findUserLogin(userLogin);
-
-  console.log(findUser);
 
   if (findUser.rowCount == 0) {
     console.log("no user");
@@ -129,8 +125,6 @@ app.get("/login", async (req, res) => {
       .status(200);
   }
 
-  console.log(findUser);
-
   const hashObj = createHash("sha256");
   //console.log(hashObj.update(password).digest("hex"));
   if (
@@ -138,7 +132,8 @@ app.get("/login", async (req, res) => {
   ) {
     console.log("good");
     req.session.loggedIn = true;
-    req.session.loggedInUsername = findUser.username;
+    req.session.loggedInUsername = findUser.rows[0].username;
+    console.log(req);
 
     res.send({ success: "Succcessful Login!" }).status(200);
   } else {
@@ -362,14 +357,23 @@ async function createUser(user) {
   const user_id = uuidv4();
   // console.log("uuid: " + user_id);
 
+  const hash = createHash("sha256");
   const password_hash = hash.update(user.password);
 
   const queryText =
-    "INSERT INTO users(user_id, username, password_hash, email_address) VALUES($1, $2, $3, $4) RETURNING *;";
+    "INSERT INTO users(user_id, username, password_hash, email_address, first_name, last_name, account_created_timestamptz) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING *;";
 
   const query = {
     text: queryText,
-    values: [user_id, user.username, hash.digest("hex"), user.email],
+    values: [
+      user_id,
+      user.username,
+      hash.digest("hex"),
+      user.email,
+      user.firstname,
+      user.lastname,
+      new Date(new Date().toISOString()),
+    ],
   };
 
   const queryResult = await client.query(query);
