@@ -10,6 +10,8 @@ const { createHash } = require("node:crypto");
 require("dotenv").config({ path: "./vars/.env" });
 
 const client = require("./db").client;
+const sessionConfig = require("./db").sessionConfig;
+const tools = require("./tools/tool-functions.js");
 
 const app = express();
 const port = 8443;
@@ -43,14 +45,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(cookieParser());
-app.use(
-  session({
-    secret: "mburseth",
-    saveUninitialized: true,
-    cookie: { maxAge: oneDay },
-    resave: false,
-  })
-);
+app.use(session(sessionConfig));
 
 http.createServer(app).listen(8443);
 //https.createServer(options, app).listen(443);
@@ -190,7 +185,7 @@ app.post("/verifier-code", (req, res) => {
 //I don't think this is still being used, this is now handled client side?
 //Apparently CORS protocol does not allow for multiple redirects, was getting cross origin error
 app.get("/spotify-api/get-access-code", (req, res) => {
-  state = generateRandomString(16);
+  state = tools.generateRandomString(16);
 
   let authUrl = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(
     REDIRECT_URI
@@ -322,24 +317,6 @@ function loginToSpotifyAccessCode() {
   )}&scope=${SCOPES.join("%20")}`;
   // Open the authentication URL in a new window
   window.open(authUrl, "_self");
-}
-
-//Generates random string for code verifier
-//This isn't used here on backend, was supposed to be used for state verification
-//TODO: Implement state verification???
-function generateRandomString(length) {
-  var characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  var randomString = "";
-
-  for (var i = 0; i < length; i++) {
-    var character = characters.charAt(
-      Math.floor(Math.random() * characters.length)
-    );
-    randomString += character;
-  }
-
-  return randomString;
 }
 
 async function getProfileInfo() {
